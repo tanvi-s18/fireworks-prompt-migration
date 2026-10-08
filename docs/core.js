@@ -17,6 +17,35 @@ export const SAMPLE_CASES = [
   {id: 'identifier', name: 'Identifiers and amounts', note: 'Preserve leading zeros and distinguish the total from the subtotal.', input: 'Invoice number: 000042\nIssued by: Signal Labs\nSubtotal: GBP 1000.00\nVAT: GBP 200.00\nInvoice total: GBP 1200.00', expected: {invoice_id:'000042', seller_name:'Signal Labs', total:1200, currency:'GBP'}},
 ];
 export function clone(value) {return structuredClone(value);}
+// Saved baseline fixtures, authored for the demo, not responses from Claude.
+// Both illustrative models infer USD incorrectly in the missing-data example.
+export const SAVED_INCUMBENT = SAMPLE_CASES.map(c=>({...c.expected,...(c.id==='missing'?{currency:'USD'}:{})}));
+export function classifyCheck(incumbent, target) {
+  if(incumbent.pass && !target.pass) return 'regression';
+  if(!incumbent.pass && !target.pass) return 'shared';
+  if(!incumbent.pass && target.pass) return 'improvement';
+  return 'pass';
+}
+export function migrationSummary(incumbent,target) {
+  const summary={regressions:0,sharedFailures:0,improvements:0,passes:0};
+  const keys={regression:'regressions',shared:'sharedFailures',improvement:'improvements',pass:'passes'};
+  for(const result of target) {
+    const baseline=incumbent.find(r=>r.id===result.id);
+    if(!baseline)throw new Error('Missing incumbent result for '+result.id);
+    for(const check of result.checks) {
+      const saved=baseline.checks.find(c=>c.field===check.field);
+      if(!saved)throw new Error('Missing incumbent field '+check.field);
+      summary[keys[classifyCheck(saved,check)]]++;
+    }
+  }
+  return summary;
+}
+export function migrationFailures(incumbent,target) {
+  return target.map(result=>({...result,checks:result.checks.filter(check=>{
+    const saved=incumbent.find(r=>r.id===result.id)?.checks.find(c=>c.field===check.field);
+    return saved && classifyCheck(saved,check)==='regression';
+  })}));
+}
 export function isObject(value) {return value !== null && typeof value === 'object' && !Array.isArray(value);}
 export function validateExpected(value) {
   if (!isObject(value)) throw new Error('Expected output must be a JSON object.');

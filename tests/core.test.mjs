@@ -41,3 +41,27 @@ test('editing supported document values changes the simulation',()=>{
 test('unsupported documents produce explicit missing values, not sample answers',()=>{
  assert.deepEqual(simulateExtraction('Unstructured note',ORIGINAL_PROMPT),{invoice_id:null,seller_name:null,total:null,currency:null});
 });
+
+test('migration comparison separates regressions, shared failures and target improvements',async()=>{
+ const {SAVED_INCUMBENT,migrationSummary,migrationFailures}=await import('../docs/core.js');
+ const baseline=makeResults(SAMPLE_CASES,SAVED_INCUMBENT);
+ const before=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,ORIGINAL_PROMPT)));
+ assert.equal(summarize(baseline).fields,15);
+ assert.deepEqual(migrationSummary(baseline,before),{regressions:3,sharedFailures:1,improvements:0,passes:12});
+ const failures=migrationFailures(baseline,before);
+ assert.equal(failures.flatMap(r=>r.checks).length,3);
+ assert.ok(failures.flatMap(r=>r.checks).every(c=>c.field!=='currency'));
+ const adapted=revise(ORIGINAL_PROMPT,suggestAdditions(failures,ORIGINAL_PROMPT));
+ const after=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,adapted)));
+ assert.deepEqual(migrationSummary(baseline,after),{regressions:0,sharedFailures:1,improvements:0,passes:15});
+ const correct=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>c.expected));
+ assert.deepEqual(migrationSummary(baseline,correct),{regressions:0,sharedFailures:0,improvements:1,passes:15});
+ assert.deepEqual(migrationSummary([...baseline].reverse(),before),migrationSummary(baseline,before));
+});
+test('changing expected values rescores incumbent as well as target',async()=>{
+ const {SAVED_INCUMBENT,migrationSummary}=await import('../docs/core.js');
+ const cases=structuredClone(SAMPLE_CASES);cases[0].expected.total=999;
+ const baseline=makeResults(cases,SAVED_INCUMBENT);
+ const target=makeResults(cases,cases.map(c=>simulateExtraction(c.input,ORIGINAL_PROMPT)));
+ assert.deepEqual(migrationSummary(baseline,target),{regressions:3,sharedFailures:2,improvements:0,passes:11});
+});
