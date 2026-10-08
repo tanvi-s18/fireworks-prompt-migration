@@ -8,23 +8,25 @@ const sourceModel=()=>SOURCE_MODELS.find(m=>m.id===state.sourceId);
 const targetModel=()=>TARGET_MODELS.find(m=>m.id===state.targetId);
 const pickedAdditions=()=>state.additions?.filter(a=>state.selectedEdits.has(a.id))||[];
 function status(message='',error=false){$('status').textContent=message;$('status').classList.toggle('error',error);$('status').hidden=!message;}
+const screens=['setup','results','adapt','final'];
 function updateSteps(){
- for(const [i,name] of ['setup','results','adapt'].entries()){
+ const available={setup:true,results:!!state.before,adapt:!!state.additions,final:!!state.after};
+ const complete={setup:!!state.before,results:!!state.additions,adapt:!!state.after,final:false};
+ for(const name of screens){
   const button=$('step-'+name),current=state.screen===name;
-  button.classList.toggle('current',current);button.classList.toggle('done',name==='setup'&&!!state.before || name==='results'&&!!state.additions);
+  button.classList.toggle('current',current);button.classList.toggle('done',!current&&complete[name]);
   if(current)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
-  button.disabled=name==='results'?!state.before:name==='adapt'?!state.additions:false;
+  button.disabled=!available[name];
  }
 }
 function showScreen(name){
- if(name!=='setup'&&!state.before || name==='adapt'&&!state.additions)return;
+ if(name!=='setup'&&!state.before || name==='adapt'&&!state.additions || name==='final'&&!state.after)return;
  state.screen=name;
- for(const screen of ['setup','results','adapt'])$('screen-'+screen).hidden=screen!==name;
- updateSteps();
- $(name==='setup'?'setup-heading':name==='results'?'results-heading':'adapt-heading').focus({preventScroll:true});
+ for(const screen of screens)$('screen-'+screen).hidden=screen!==name;
+ updateSteps();$(name+'-heading').focus({preventScroll:true});
  window.scrollTo({top:0,behavior:'instant'});
 }
-function clearAdapted(){state.after=null;state.testedPrompt=null;state.appliedAdditions=[];}
+function clearAdapted(){state.after=null;state.testedPrompt=null;state.appliedAdditions=[];$('final-content').replaceChildren();updateSteps();}
 function invalidate(){
  const hadResults=!!state.before;
  state.incumbent=null;state.before=null;state.additions=null;state.selectedEdits=new Set();state.snapshot=null;clearAdapted();updateSteps();
@@ -47,8 +49,8 @@ function snapshot(){
   return {id:c.id,name:c.name,input:c.input.trim(),expected,incumbent:simulateIncumbent(c.input.trim())};
  })};
 }
-function selectFirstFailure(){
- const results=state.after||state.before;
+function selectFirstFailure(final=false){
+ const results=final?state.after:state.before;
  const regression=results.findIndex(r=>migrationSummary([state.incumbent.find(x=>x.id===r.id)],[r]).regressions);
  state.resultSelected=regression>=0?regression:Math.max(0,results.findIndex(r=>!r.pass));
 }
@@ -62,12 +64,13 @@ function run(){
  }catch(e){status(e.message,true);}
 }
 const modelCell=check=>`<td class="${check.pass?'check-pass':'check-fail'}"><span class="field-state" aria-label="${check.pass?'Pass':'Fail'}">${check.pass?'✓':'×'}</span>${esc(format(check.actual))}</td>`;
-function renderResults(){
- if(!state.before)return;
- const {incumbent,before,after}=state,target=after||before;
+function renderResults(mode='results'){
+ if(!state.before || mode==='final'&&!state.after)return;
+ const {incumbent,before}=state,after=mode==='final'?state.after:null,target=after||before;
+ const content=$(mode+'-content');
  const source=state.snapshot.sourceModel.name,candidate=state.snapshot.targetModel.name;
  const gap=migrationSummary(incumbent,target),oldGap=migrationSummary(incumbent,before),delta=after?transitions(before,after):null;
- $('results-subtitle').textContent=source+' → '+candidate+' · 4 examples · 16 field checks';
+ $(mode+'-subtitle').textContent=source+' → '+candidate+' · 4 examples · 16 field checks';
  const stage=(name,label,results,active=false)=>{const s=summarize(results);return `<div class="panel stage-card ${active?'active':''}"><div><h3>${esc(name)}</h3><p>${label}</p></div><strong aria-label="${s.fields} of ${s.total} field checks passed">${s.fields}<small> / ${s.total}</small></strong><p class="stage-complete"><b>${s.cases} / ${results.length}</b> complete examples pass</p></div>`;};
  const stages=`<div class="stage-cards ${after?'three':''}">${stage(source,'Current model · original prompt',incumbent)}${stage(candidate,'Candidate · original prompt',before,!after)}${after?stage(candidate,`Adapted · ${state.appliedAdditions.length} edit${state.appliedAdditions.length===1?'':'s'} applied`,after,true):''}</div><p class="score-caption">Scores count field checks. A complete example passes only when all four fields pass. All results are simulated.</p>`;
  const summary=`<div class="migration-summary"><div><strong class="${gap.regressions?'negative':'positive'}">${gap.regressions}</strong><span>Migration regressions<small>Current passes · candidate fails</small></span></div><div><strong>${gap.sharedFailures}</strong><span>Shared failures<small>Both fail the requirement</small></span></div><div><strong>${gap.improvements}</strong><span>Candidate improvements<small>Current fails · candidate passes</small></span></div></div>`;
@@ -80,20 +83,21 @@ function renderResults(){
   return `<button class="result-case ${i===state.resultSelected?'selected':''}" data-result="${i}" aria-pressed="${i===state.resultSelected}"><span class="case-number">0${i+1}</span><span>${esc(r.name)}<small>${badge}</small></span></button>`;
  }).join('');
  const testedPrompt=after?`<section class="tested-prompt panel" aria-labelledby="tested-prompt-heading"><div class="panel-header"><h3 id="tested-prompt-heading">Prompt preview</h3><span class="small-label">${state.appliedAdditions.length} TESTED EDIT${state.appliedAdditions.length===1?'':'S'}</span></div><pre id="tested-prompt-text">${esc(state.testedPrompt)}</pre><div class="panel-foot">The exact prompt used for these results. Only your selected edits are included.</div></section>`:'';
- $('results-content').innerHTML=stages+summary+`<div class="comparison-note ${gap.regressions?'has-gap':''}">${message}</div>`+testedPrompt+`<div class="result-layout"><div class="result-cases"><div class="section-label">EXAMPLES</div>${cases}</div><div id="result-detail" class="result-detail panel"></div></div>`;
- document.querySelectorAll('.result-case').forEach(b=>b.onclick=()=>{state.resultSelected=Number(b.dataset.result);renderResults();});
- renderResultDetail();
- const supported=suggestAdditions(migrationFailures(incumbent,before),state.snapshot.prompt).length;
- $('choose-edits').hidden=!supported;
- $('choose-edits').textContent=after?'Change selected edits':'Choose prompt edits →';
- $('choose-edits').className='button '+(after?'secondary':'primary');
- $('copy-prompt').hidden=!after;
+ const exampleResults=`<div class="result-layout"><div class="result-cases"><div class="section-label">EXAMPLES</div>${cases}</div><div id="${mode}-detail" class="result-detail panel"></div></div>`;
+ content.innerHTML=testedPrompt+stages+summary+`<div class="comparison-note ${gap.regressions?'has-gap':''}">${message}</div>`+(after?`<section class="final-example-results" aria-labelledby="final-examples-heading"><div class="panel-header"><h3 id="final-examples-heading">Example results</h3><span class="small-label">SAME REQUIREMENTS · ALL THREE STAGES</span></div>${exampleResults}</section>`:exampleResults);
+ content.querySelectorAll('.result-case').forEach(b=>b.onclick=()=>{
+  state.resultSelected=Number(b.dataset.result);
+  content.querySelectorAll('.result-case').forEach(button=>{const selected=Number(button.dataset.result)===state.resultSelected;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));});
+  renderResultDetail(mode);
+ });
+ renderResultDetail(mode);
+ if(mode==='results')$('choose-edits').hidden=!suggestAdditions(migrationFailures(incumbent,before),state.snapshot.prompt).length;
 }
-function renderResultDetail(){
- const {incumbent,before,after}=state,target=after||before,index=state.resultSelected;
+function renderResultDetail(mode='results'){
+ const {incumbent,before}=state,after=mode==='final'?state.after:null,target=after||before,index=state.resultSelected;
  const r=target[index],baseline=incumbent.find(x=>x.id===r.id),original=before.find(x=>x.id===r.id);
  const labels={regression:'Migration regression',shared:'Shared failure',improvement:'Candidate improvement',pass:'Passes'};
- $('result-detail').innerHTML=`<div class="panel-header"><h3>${esc(r.name)}</h3><span class="case-badge ${r.pass?'pass':''}">${r.checks.filter(c=>c.pass).length} / 4 checks pass</span></div><table class="check-table"><thead><tr><th>Requirement</th><th>Expected</th><th>Current model<br><span>Original prompt</span></th><th>Candidate<br><span>Original prompt</span></th>${after?'<th>Candidate<br><span>Selected edits</span></th>':''}</tr></thead><tbody>${r.checks.map(c=>{
+ $(mode+'-detail').innerHTML=`<div class="panel-header"><h3>${esc(r.name)}</h3><span class="case-badge ${r.pass?'pass':''}">${r.checks.filter(c=>c.pass).length} / 4 checks pass</span></div><table class="check-table"><thead><tr><th>Requirement</th><th>Expected</th><th>Current model<br><span>Original prompt</span></th><th>Candidate<br><span>Original prompt</span></th>${after?'<th>Candidate<br><span>Selected edits</span></th>':''}</tr></thead><tbody>${r.checks.map(c=>{
   const saved=baseline.checks.find(x=>x.field===c.field),old=original.checks.find(x=>x.field===c.field),kind=classifyCheck(saved,c);
   const resolved=after&&kind==='pass'&&classifyCheck(saved,old)==='regression';
   return `<tr><td>${esc(c.field)}<small class="check-kind ${resolved?'improvement':kind}">${resolved?'Resolved regression':labels[kind]}</small></td><td>${esc(format(c.expected))}</td>${modelCell(saved)}${modelCell(old)}${after?modelCell(c):''}</tr>`;
@@ -112,14 +116,13 @@ function renderAdaptation(){
   input.closest('.revision-rule').classList.toggle('checked',input.checked);
   const hadAfter=!!state.after;clearAdapted();
   if(hadAfter)status('Selection changed. Rerun to see results for these edits.');
-  updatePreview();renderResults();
+  updateSelection();
  });
- updatePreview();
+ updateSelection();
 }
-function updatePreview(){
+function updateSelection(){
  const selected=pickedAdditions();
  $('selection-count').textContent=selected.length+' OF '+state.additions.length+' SELECTED';
- $('prompt-preview').innerHTML=`<div class="original-text">${esc(state.snapshot.prompt)}</div>${selected.length?`<p class="clarifications-title">CLARIFICATIONS</p>${selected.map(a=>`<span class="selected-addition">${esc(a.instruction)}</span>`).join('')}`:'<p class="no-selection">No additions selected. Your original prompt is unchanged.</p>'}`;
  $('rerun').disabled=!selected.length;
  $('rerun-hint').textContent=selected.length?'Only selected edits will be tested.':'Select at least one edit to test.';
 }
@@ -127,7 +130,7 @@ function rerun(){
  const additions=pickedAdditions();if(!additions.length)return;
  state.testedPrompt=revise(state.snapshot.prompt,additions);state.appliedAdditions=clone(additions);
  state.after=makeResults(state.snapshot.cases,state.snapshot.cases.map(c=>simulateExtraction(c.input,state.testedPrompt)));
- status();selectFirstFailure();renderResults();showScreen('results');
+ status();selectFirstFailure(true);renderResults('final');showScreen('final');
 }
 async function copyTestedPrompt(){
  if(!state.after||!state.testedPrompt)return;
@@ -146,7 +149,8 @@ for(const group of ['Anthropic','OpenAI']){
 for(const model of TARGET_MODELS)$('target-model').add(new Option(model.name,model.id));
 $('run').onclick=run;$('rerun').onclick=rerun;$('copy-prompt').onclick=copyTestedPrompt;$('choose-edits').onclick=chooseEdits;
 $('back-setup').onclick=()=>{status();showScreen('setup');};$('back-results').onclick=()=>{renderResults();showScreen('results');};
-$('step-setup').onclick=()=>{status();showScreen('setup');};$('step-results').onclick=()=>{renderResults();showScreen('results');};$('step-adapt').onclick=chooseEdits;
+$('step-setup').onclick=()=>{status();showScreen('setup');};$('step-results').onclick=()=>{renderResults();showScreen('results');};$('step-adapt').onclick=chooseEdits;$('step-final').onclick=()=>{status();renderResults('final');showScreen('final');};
+$('back-edits').onclick=chooseEdits;
 $('reset').onclick=()=>{state.prompt=ORIGINAL_PROMPT;state.cases=freshCases();state.selected=0;$('prompt').value=state.prompt;invalidate();renderCase();status('Sample prompt and examples restored.');};
 $('prompt').oninput=()=>{state.prompt=$('prompt').value;invalidate();};
 $('case-input').oninput=()=>{state.cases[state.selected].input=$('case-input').value;$('input-error').hidden=true;invalidate();};

@@ -14,10 +14,10 @@ Fireworks already provides datasets, evaluation jobs, custom evaluators, and [GE
 
 1. **Set up comparison.** Choose from seven Claude/GPT baseline models and eight Fireworks candidates. Edit your prompt and the four starter examples with expected JSON.
 2. **Inspect results.** Review one example at a time. Separate migration regressions (current model passes, candidate fails), shared failures, and candidate improvements.
-3. **Choose prompt edits.** Check or uncheck each suggested addition. A live preview includes only selected changes. Test the selection, then return to results to compare all three stages and see the exact tested text in a visible prompt preview.
-4. Inspect and copy the exact updated prompt. Comparison export is intentionally omitted; the proposed production integration would save the dataset, prompt versions, and evaluation run within Fireworks.
+3. **Choose prompt edits.** Check or uncheck each suggested addition. A live preview includes only selected changes. Test the selection to advance to the final review. This step shows the individual additions, not the full prompt.
+4. **Review final prompt.** See the exact tested prompt first, compare all three stages, inspect remaining failures, and copy the updated prompt. Comparison export is intentionally omitted; the proposed production integration would save the dataset, prompt versions, and evaluation run within Fireworks.
 
-Steps preserve inputs when navigating back. Editing setup invalidates comparisons. Changing the selected adaptations clears the adapted run until retested; untested changes are never shown as the tested prompt. With no additions selected, the original prompt stays unchanged and the rerun button is disabled.
+The four steps move forward: setup, comparison, edit selection, final review. Reruns open step 4 rather than jumping back to step 2. Steps preserve inputs when navigating back. Editing setup invalidates comparisons. Changing the selected adaptations clears the adapted run until retested; untested changes are never shown as the tested prompt. With no additions selected, the original prompt stays unchanged and the rerun button is disabled.
 
 The demo is explicitly limited to invoice extraction with four fixed JSON fields. Expected values define correctness. Current-model outputs are evaluated too. Equal aggregate scores do not establish parity; regressions are tracked per field. Parity does not establish correctness or production readiness. Cards show both field checks and complete examples passed: the fully adapted sample passes 15/16 fields but only 3/4 complete examples.
 

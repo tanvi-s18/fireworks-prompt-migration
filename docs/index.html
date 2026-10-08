@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="A guided first migration evaluation inside a Fireworks console concept. Start with a prompt and a few examples. All model outputs are simulated.">
 <title>First migration eval · Fireworks console prototype</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=7">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 <aside class="sidebar" aria-label="Console context">
@@ -21,9 +21,10 @@
   <div class="page-heading"><h1>Create your first migration eval</h1><span class="badge">CONSOLE CONCEPT</span></div>
   <details class="demo-notice"><summary><span class="demo-dot"></span><strong>Demo mode</strong> · Simulated responses and suggestions. No API keys needed.<span class="notice-more">Details</span></summary><p>Model choices identify your comparison; all current models share one local behavior profile, and all Fireworks models share another. Results do not measure or predict model performance. The demo supports the invoice labels and three candidate prompt rules in these examples. Current-model outputs follow a fixed profile and do not respond to prompt edits. In production, this onboarding flow would reuse Fireworks datasets, Eval Protocol, and <a href="https://fireworks.ai/blog/self-improving-agent" target="_blank" rel="noopener">GEPA</a>; these services are not connected here.</p></details>
   <nav class="steps" aria-label="Evaluation steps">
-    <button id="step-setup" class="step current" aria-current="step"><span>1</span>Set up comparison</button>
-    <span class="step-line" aria-hidden="true"></span><button id="step-results" class="step" disabled><span>2</span>Inspect results</button>
-    <span class="step-line" aria-hidden="true"></span><button id="step-adapt" class="step" disabled><span>3</span>Choose prompt edits</button>
+    <button id="step-setup" class="step current" aria-current="step"><span>1</span>Set up</button>
+    <span class="step-line" aria-hidden="true"></span><button id="step-results" class="step" disabled><span>2</span>Compare</button>
+    <span class="step-line" aria-hidden="true"></span><button id="step-adapt" class="step" disabled><span>3</span>Choose edits</button>
+    <span class="step-line" aria-hidden="true"></span><button id="step-final" class="step" disabled><span>4</span>Review final prompt</button>
   </nav>
   <div id="status" class="status" role="status" aria-live="polite" hidden></div>
   <section id="screen-setup" class="screen" aria-labelledby="setup-heading">
@@ -44,16 +45,22 @@
   <section id="screen-results" class="screen" aria-labelledby="results-heading" hidden>
     <div class="screen-heading"><div><h2 id="results-heading" tabindex="-1">Inspect the migration gaps</h2><p id="results-subtitle">Compare each model against your expected values.</p></div><span class="badge">SIMULATED</span></div>
     <div id="results-content"></div>
-    <div class="screen-actions"><button id="back-setup" class="text-button">← Back to setup</button><div class="action-group"><button id="choose-edits" class="button primary">Choose prompt edits →</button><button id="copy-prompt" class="button primary" hidden>Copy updated prompt</button></div></div>
+    <div class="screen-actions"><button id="back-setup" class="text-button">← Back to setup</button><div class="action-group"><button id="choose-edits" class="button primary">Choose prompt edits →</button></div></div>
     <p class="results-limit">Four starter examples are not a production evaluation. Expand with representative held-out cases before deciding to migrate.</p>
   </section>
   <section id="screen-adapt" class="screen" aria-labelledby="adapt-heading" hidden>
     <div class="screen-heading"><div><h2 id="adapt-heading" tabindex="-1">Choose what to change</h2><p>Keep the edits you want. Leave the rest out.</p></div><span id="selection-count" class="badge"></span></div>
-    <div class="adapt-grid"><section><div class="section-label">SUGGESTED ADDITIONS <span>Based on migration regressions</span></div><div id="revision-rules"></div></section><section class="panel preview-panel"><div class="panel-header"><h3>Prompt preview</h3><span class="small-label">SELECTED EDITS ONLY</span></div><div id="prompt-preview"></div><div class="panel-foot">Dataset, expected values, and baseline stay fixed.</div></section></div>
-    <div class="screen-actions"><button id="back-results" class="text-button">← Back to results</button><div class="action-group"><span id="rerun-hint" class="muted"></span><button id="rerun" class="button primary">Test selected edits →</button></div></div>
+    <div class="adapt-choices"><div class="section-label">SUGGESTED ADDITIONS <span>Based on migration regressions</span></div><div id="revision-rules"></div><p class="edit-selection-note">Selected additions will be appended to your original prompt. Review the full tested prompt on the next screen.</p></div>
+    <div class="screen-actions"><button id="back-results" class="text-button">← Back to comparison</button><div class="action-group"><span id="rerun-hint" class="muted"></span><button id="rerun" class="button primary">Test edits & review prompt →</button></div></div>
+  </section>
+  <section id="screen-final" class="screen" aria-labelledby="final-heading" hidden>
+    <div class="screen-heading"><div><h2 id="final-heading" tabindex="-1">Review your updated prompt</h2><p id="final-subtitle"></p></div><span class="badge">SIMULATED</span></div>
+    <div id="final-content"></div>
+    <div class="screen-actions"><button id="back-edits" class="text-button">← Back to edits</button><button id="copy-prompt" class="button primary">Copy updated prompt</button></div>
+    <p class="results-limit">These results cover the same four starter examples. Check representative held-out cases before deciding to migrate.</p>
   </section>
   <footer><span>Fireworks console concept</span><span>A guided first evaluation · Desktop prototype</span></footer>
 </main>
 </div>
-<script type="module" src="app.js?v=7"></script>
+<script type="module" src="app.js?v=8"></script>
 </body></html>
