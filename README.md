@@ -15,11 +15,11 @@ Fireworks already provides datasets, evaluation jobs, custom evaluators, and [GE
 1. **Set up comparison.** Choose from seven Claude/GPT baseline models and eight Fireworks candidates. Edit your prompt and the four starter examples with expected JSON.
 2. **Inspect results.** Review one example at a time. Separate migration regressions (current model passes, candidate fails), shared failures, and candidate improvements.
 3. **Choose prompt edits.** Check or uncheck each suggested addition. A live preview includes only selected changes. Test the selection, then return to results to compare all three stages and see the exact tested text in a visible prompt preview.
-4. Copy the updated prompt as the main finish action. Optionally export the comparison as a JSON record of prompts, examples, outputs, checks, model selections, and only the edits actually tested.
+4. Inspect and copy the exact updated prompt. Comparison export is intentionally omitted; the proposed production integration would save the dataset, prompt versions, and evaluation run within Fireworks.
 
-Steps preserve inputs when navigating back. Editing setup invalidates comparisons. Changing the selected adaptations clears the adapted run until retested; untested changes are never exported as applied. With no additions selected, the original prompt stays unchanged and the rerun button is disabled.
+Steps preserve inputs when navigating back. Editing setup invalidates comparisons. Changing the selected adaptations clears the adapted run until retested; untested changes are never shown as the tested prompt. With no additions selected, the original prompt stays unchanged and the rerun button is disabled.
 
-Expected values define correctness. Current-model outputs are evaluated too. Equal aggregate scores do not establish parity; regressions are tracked per field. Parity does not establish correctness or production readiness.
+The demo is explicitly limited to invoice extraction with four fixed JSON fields. Expected values define correctness. Current-model outputs are evaluated too. Equal aggregate scores do not establish parity; regressions are tracked per field. Parity does not establish correctness or production readiness. Cards show both field checks and complete examples passed: the fully adapted sample passes 15/16 fields but only 3/4 complete examples.
 
 ## Simulation boundary
 
@@ -27,7 +27,7 @@ Both model responses and prompt suggestions use a limited deterministic browser 
 
 The default sample has 3 migration regressions and 1 shared failure, then 0 migration regressions and 1 shared failure after all three edits. Selecting just one edit fixes only its corresponding check and leaves two migration regressions. These are invented behaviors, not measured or predicted model results.
 
-The incumbent simulation reads the document independently of expected values. Edits invalidate results, and rerunning regenerates both outputs. Expected values are never changed by suggestions; incumbent results stay fixed during the adaptation rerun. All data stays in the browser session until exported; there is no storage or telemetry. No API keys, accounts, inference requests, or backend are used.
+The incumbent simulation reads the document independently of expected values, using a fixed behavior profile that does not respond to edits to the prompt. Edits invalidate results, and rerunning regenerates both outputs. Expected values are never changed by suggestions; incumbent results stay fixed during the adaptation rerun. Data stays in the browser session unless the user copies the tested prompt; there is no storage or telemetry. No API keys, accounts, inference requests, or backend are used.
 
 The four starter examples are not a representative or held-out evaluation. A production migration decision requires broader data and repeated runs.
 

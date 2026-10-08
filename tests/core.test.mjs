@@ -99,23 +99,3 @@ test('each prompt edit can be applied independently without fixing unselected fa
  }
  assert.deepEqual(SAMPLE_CASES.map(c=>c.expected),expectations);
 });
-
-test('comparison export includes only tested additions and selected model identities',async()=>{
- const {simulateIncumbent,migrationFailures}=await import('../docs/core.js');
- const {createComparisonExport}=await import('../docs/export.js');
- const {SOURCE_MODELS,TARGET_MODELS}=await import('../docs/models.js');
- const incumbent=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateIncumbent(c.input)));
- const before=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,ORIGINAL_PROMPT)));
- const additions=suggestAdditions(migrationFailures(incumbent,before),ORIGINAL_PROMPT);
- const appliedAdditions=additions.filter(a=>a.id==='seller_name');
- const testedPrompt=revise(ORIGINAL_PROMPT,appliedAdditions);
- const after=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,testedPrompt)));
- const state={snapshot:{sourceModel:SOURCE_MODELS[3],targetModel:TARGET_MODELS[2],prompt:ORIGINAL_PROMPT,cases:SAMPLE_CASES},incumbent,before,after,additions,appliedAdditions,testedPrompt,runAt:'2026-10-08T00:00:00Z'};
- const exported=JSON.parse(JSON.stringify(createComparisonExport(state)));
- assert.equal(exported.source_model.name,'GPT-5.5');assert.equal(exported.target_model.name,'MiniMax M3');
- assert.deepEqual(exported.applied_additions.map(a=>a.id),['seller_name']);
- assert.equal(exported.proposed_additions.length,3);assert.equal(exported.revised_prompt,testedPrompt);
- assert.equal(exported.migration_after.regressions,2);
- const untested=createComparisonExport({...state,after:null});
- assert.equal(untested.revised_prompt,null);assert.equal(untested.migration_after,null);assert.deepEqual(untested.applied_additions,[]);
-});

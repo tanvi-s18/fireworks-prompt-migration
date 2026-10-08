@@ -1,10 +1,9 @@
 import {ORIGINAL_PROMPT,SAMPLE_CASES,simulateIncumbent,clone,makeResults,summarize,transitions,revise,format,validateExpected,simulateExtraction,suggestAdditions,classifyCheck,migrationSummary,migrationFailures} from './core.js';
 import {SOURCE_MODELS,TARGET_MODELS} from './models.js';
-import {createComparisonExport} from './export.js';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const freshCases=()=>clone(SAMPLE_CASES).map(c=>({...c,rawExpected:JSON.stringify(c.expected,null,2)}));
-const state={screen:'setup',sourceId:SOURCE_MODELS[0].id,targetId:TARGET_MODELS[0].id,prompt:ORIGINAL_PROMPT,cases:freshCases(),selected:0,resultSelected:1,incumbent:null,before:null,after:null,additions:null,selectedEdits:new Set(),appliedAdditions:[],testedPrompt:null,snapshot:null,runAt:null};
+const state={screen:'setup',sourceId:SOURCE_MODELS[0].id,targetId:TARGET_MODELS[0].id,prompt:ORIGINAL_PROMPT,cases:freshCases(),selected:0,resultSelected:1,incumbent:null,before:null,after:null,additions:null,selectedEdits:new Set(),appliedAdditions:[],testedPrompt:null,snapshot:null};
 const sourceModel=()=>SOURCE_MODELS.find(m=>m.id===state.sourceId);
 const targetModel=()=>TARGET_MODELS.find(m=>m.id===state.targetId);
 const pickedAdditions=()=>state.additions?.filter(a=>state.selectedEdits.has(a.id))||[];
@@ -58,7 +57,7 @@ function run(){
   state.snapshot=snapshot();const s=state.snapshot;
   state.incumbent=makeResults(s.cases,s.cases.map(c=>c.incumbent));
   state.before=makeResults(s.cases,s.cases.map(c=>simulateExtraction(c.input,s.prompt)));
-  state.additions=null;state.selectedEdits=new Set();clearAdapted();state.runAt=new Date().toISOString();
+  state.additions=null;state.selectedEdits=new Set();clearAdapted();
   status();selectFirstFailure();renderResults();showScreen('results');
  }catch(e){status(e.message,true);}
 }
@@ -69,8 +68,8 @@ function renderResults(){
  const source=state.snapshot.sourceModel.name,candidate=state.snapshot.targetModel.name;
  const gap=migrationSummary(incumbent,target),oldGap=migrationSummary(incumbent,before),delta=after?transitions(before,after):null;
  $('results-subtitle').textContent=source+' → '+candidate+' · 4 examples · 16 field checks';
- const stage=(name,label,results,active=false)=>{const s=summarize(results);return `<div class="panel stage-card ${active?'active':''}"><div><h3>${esc(name)}</h3><p>${label}</p></div><strong>${s.fields}<small> / ${s.total}</small></strong></div>`;};
- const stages=`<div class="stage-cards ${after?'three':''}">${stage(source,'Current model · original prompt',incumbent)}${stage(candidate,'Candidate · original prompt',before,!after)}${after?stage(candidate,`Adapted · ${state.appliedAdditions.length} edit${state.appliedAdditions.length===1?'':'s'} applied`,after,true):''}</div><p class="score-caption">Field checks passed against expected values. All results are simulated.</p>`;
+ const stage=(name,label,results,active=false)=>{const s=summarize(results);return `<div class="panel stage-card ${active?'active':''}"><div><h3>${esc(name)}</h3><p>${label}</p></div><strong aria-label="${s.fields} of ${s.total} field checks passed">${s.fields}<small> / ${s.total}</small></strong><p class="stage-complete"><b>${s.cases} / ${results.length}</b> complete examples pass</p></div>`;};
+ const stages=`<div class="stage-cards ${after?'three':''}">${stage(source,'Current model · original prompt',incumbent)}${stage(candidate,'Candidate · original prompt',before,!after)}${after?stage(candidate,`Adapted · ${state.appliedAdditions.length} edit${state.appliedAdditions.length===1?'':'s'} applied`,after,true):''}</div><p class="score-caption">Scores count field checks. A complete example passes only when all four fields pass. All results are simulated.</p>`;
  const summary=`<div class="migration-summary"><div><strong class="${gap.regressions?'negative':'positive'}">${gap.regressions}</strong><span>Migration regressions<small>Current passes · candidate fails</small></span></div><div><strong>${gap.sharedFailures}</strong><span>Shared failures<small>Both fail the requirement</small></span></div><div><strong>${gap.improvements}</strong><span>Candidate improvements<small>Current fails · candidate passes</small></span></div></div>`;
  let message=gap.regressions?'Inspect the checks that passed on your current model and failed on the candidate.':'No migration regressions in these four examples.';
  if(after)message=`<strong>${oldGap.regressions} → ${gap.regressions} migration regressions.</strong> ${delta.fixed} check${delta.fixed===1?'':'s'} fixed; ${delta.regressed} newly failing after your ${state.appliedAdditions.length} selected edit${state.appliedAdditions.length===1?'':'s'}.`;
@@ -88,7 +87,6 @@ function renderResults(){
  $('choose-edits').hidden=!supported;
  $('choose-edits').textContent=after?'Change selected edits':'Choose prompt edits →';
  $('choose-edits').className='button '+(after?'secondary':'primary');
- $('export').className='button secondary';
  $('copy-prompt').hidden=!after;
 }
 function renderResultDetail(){
@@ -140,20 +138,13 @@ async function copyTestedPrompt(){
   status('Could not copy automatically. Select the text in the prompt preview and copy it.',true);
  }
 }
-function exportSession(){
- if(!state.before)return;
- const payload=createComparisonExport(state);
- const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=url;a.download='fireworks-migration-comparison.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
- status('Comparison exported as JSON, including the tested prompt, applied edits, examples, and simulation provenance.');
-}
 for(const group of ['Anthropic','OpenAI']){
  const el=document.createElement('optgroup');el.label=group;
  for(const model of SOURCE_MODELS.filter(m=>m.provider===group)){const option=new Option(model.name,model.id);el.append(option);}
  $('source-model').append(el);
 }
 for(const model of TARGET_MODELS)$('target-model').add(new Option(model.name,model.id));
-$('run').onclick=run;$('rerun').onclick=rerun;$('export').onclick=exportSession;$('copy-prompt').onclick=copyTestedPrompt;$('choose-edits').onclick=chooseEdits;
+$('run').onclick=run;$('rerun').onclick=rerun;$('copy-prompt').onclick=copyTestedPrompt;$('choose-edits').onclick=chooseEdits;
 $('back-setup').onclick=()=>{status();showScreen('setup');};$('back-results').onclick=()=>{renderResults();showScreen('results');};
 $('step-setup').onclick=()=>{status();showScreen('setup');};$('step-results').onclick=()=>{renderResults();showScreen('results');};$('step-adapt').onclick=chooseEdits;
 $('reset').onclick=()=>{state.prompt=ORIGINAL_PROMPT;state.cases=freshCases();state.selected=0;$('prompt').value=state.prompt;invalidate();renderCase();status('Sample prompt and examples restored.');};

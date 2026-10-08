@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="A guided first migration evaluation inside a Fireworks console concept. Start with a prompt and a few examples. All model outputs are simulated.">
 <title>First migration eval · Fireworks console prototype</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=6">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 <aside class="sidebar" aria-label="Console context">
@@ -19,7 +19,7 @@
 <header class="topbar"><div>Evaluations <span>/</span><strong>New migration eval</strong></div><a href="overview.pdf" target="_blank" rel="noopener">One-page overview ↗</a></header>
 <main>
   <div class="page-heading"><h1>Create your first migration eval</h1><span class="badge">CONSOLE CONCEPT</span></div>
-  <details class="demo-notice"><summary><span class="demo-dot"></span><strong>Demo mode</strong> · Simulated responses and suggestions. No API keys needed.<span class="notice-more">Details</span></summary><p>Model choices identify your comparison; all current models share one local behavior profile, and all Fireworks models share another. Results do not measure or predict model performance. The demo supports the invoice labels and three prompt rules in these examples. In production, this onboarding flow would reuse Fireworks datasets, Eval Protocol, and <a href="https://fireworks.ai/blog/self-improving-agent" target="_blank" rel="noopener">GEPA</a>; these services are not connected here.</p></details>
+  <details class="demo-notice"><summary><span class="demo-dot"></span><strong>Demo mode</strong> · Simulated responses and suggestions. No API keys needed.<span class="notice-more">Details</span></summary><p>Model choices identify your comparison; all current models share one local behavior profile, and all Fireworks models share another. Results do not measure or predict model performance. The demo supports the invoice labels and three candidate prompt rules in these examples. Current-model outputs follow a fixed profile and do not respond to prompt edits. In production, this onboarding flow would reuse Fireworks datasets, Eval Protocol, and <a href="https://fireworks.ai/blog/self-improving-agent" target="_blank" rel="noopener">GEPA</a>; these services are not connected here.</p></details>
   <nav class="steps" aria-label="Evaluation steps">
     <button id="step-setup" class="step current" aria-current="step"><span>1</span>Set up comparison</button>
     <span class="step-line" aria-hidden="true"></span><button id="step-results" class="step" disabled><span>2</span>Inspect results</button>
@@ -27,23 +27,24 @@
   </nav>
   <div id="status" class="status" role="status" aria-live="polite" hidden></div>
   <section id="screen-setup" class="screen" aria-labelledby="setup-heading">
-    <div class="screen-heading"><div><h2 id="setup-heading" tabindex="-1">Set up your comparison</h2><p>Use the ready-made example, or edit the prompt and expected outputs.</p></div><button id="reset" class="text-button">Reset sample</button></div>
+    <div class="screen-heading"><div><h2 id="setup-heading" tabindex="-1">Set up your comparison</h2><p>Invoice extraction demo · Edit the sample prompt and four-field JSON outputs.</p></div><button id="reset" class="text-button">Reset sample</button></div>
     <div class="model-panel panel">
-      <div class="model-picker"><label for="source-model">Current model <span>BASELINE</span></label><select id="source-model"></select></div>
+      <div class="model-picker"><label for="source-model">Current model <span>BASELINE</span></label><select id="source-model" aria-describedby="model-demo-note"></select></div>
       <span class="model-arrow" aria-hidden="true">→</span>
-      <div class="model-picker"><label for="target-model">Fireworks model <span>CANDIDATE</span></label><select id="target-model"></select></div>
+      <div class="model-picker"><label for="target-model">Fireworks model <span>CANDIDATE</span></label><select id="target-model" aria-describedby="model-demo-note"></select></div>
       <a class="catalog-link" href="https://docs.fireworks.ai/guides/recommended-models" target="_blank" rel="noopener">Model guide ↗</a>
+      <p id="model-demo-note" class="model-demo-note">Demo only: changing models changes labels, not results. All current-model choices share one simulation; all candidates share another.</p>
     </div>
     <div class="setup-grid">
       <section class="panel prompt-panel"><div class="panel-header"><h3>Your existing prompt</h3><span class="small-label">ORIGINAL</span></div><label for="prompt" class="sr-only">Original extraction prompt</label><textarea id="prompt" spellcheck="false" maxlength="12000"></textarea><div class="panel-foot">Start with the instructions you use today.</div></section>
-      <section class="panel examples-panel"><div class="panel-header"><h3>Starter dataset <span class="count">4 examples</span></h3><span class="small-label">SYNTHETIC</span></div><div id="case-tabs" class="case-tabs" role="tablist" aria-label="Test examples"></div><div class="example-content" id="case-editor" role="tabpanel"><div class="example-editors"><div><label for="case-input">Document text</label><textarea id="case-input" spellcheck="false" maxlength="12000"></textarea></div><div><label for="case-expected">Expected output <span>JSON</span></label><textarea id="case-expected" spellcheck="false" maxlength="8000"></textarea></div></div><p class="field-hint">Expected values define correctness for both models.</p><p id="input-error" class="inline-error" role="alert" hidden></p></div></section>
+      <section class="panel examples-panel"><div class="panel-header"><h3>Starter dataset <span class="count">4 examples</span></h3><span class="small-label">SYNTHETIC</span></div><div id="case-tabs" class="case-tabs" role="tablist" aria-label="Test examples"></div><div class="example-content" id="case-editor" role="tabpanel"><div class="example-editors"><div><label for="case-input">Document text</label><textarea id="case-input" spellcheck="false" maxlength="12000"></textarea></div><div><label for="case-expected">Expected output <span>JSON</span></label><textarea id="case-expected" spellcheck="false" maxlength="8000"></textarea></div></div><p class="field-hint">Required fields: invoice_id, seller_name, total, currency. Expected values define correctness.</p><p id="input-error" class="inline-error" role="alert" hidden></p></div></section>
     </div>
-    <div class="screen-actions"><p><strong>4 examples · 16 field checks</strong><br>One dataset and the same requirements for both models.</p><button id="run" class="button primary">Run comparison <span aria-hidden="true">→</span></button></div>
+    <div class="screen-actions"><p><strong>4 examples · 16 field checks</strong><br>One dataset and the same requirements for both models.</p><button id="run" class="button primary">Run demo comparison <span aria-hidden="true">→</span></button></div>
   </section>
   <section id="screen-results" class="screen" aria-labelledby="results-heading" hidden>
     <div class="screen-heading"><div><h2 id="results-heading" tabindex="-1">Inspect the migration gaps</h2><p id="results-subtitle">Compare each model against your expected values.</p></div><span class="badge">SIMULATED</span></div>
     <div id="results-content"></div>
-    <div class="screen-actions"><button id="back-setup" class="text-button">← Back to setup</button><div class="action-group"><button id="export" class="button secondary" title="Download a JSON record of the examples, prompts, outputs, and checks">Export comparison</button><button id="choose-edits" class="button primary">Choose prompt edits →</button><button id="copy-prompt" class="button primary" hidden>Copy updated prompt</button></div></div>
+    <div class="screen-actions"><button id="back-setup" class="text-button">← Back to setup</button><div class="action-group"><button id="choose-edits" class="button primary">Choose prompt edits →</button><button id="copy-prompt" class="button primary" hidden>Copy updated prompt</button></div></div>
     <p class="results-limit">Four starter examples are not a production evaluation. Expand with representative held-out cases before deciding to migrate.</p>
   </section>
   <section id="screen-adapt" class="screen" aria-labelledby="adapt-heading" hidden>
@@ -54,5 +55,5 @@
   <footer><span>Fireworks console concept</span><span>A guided first evaluation · Desktop prototype</span></footer>
 </main>
 </div>
-<script type="module" src="app.js?v=6"></script>
+<script type="module" src="app.js?v=7"></script>
 </body></html>
