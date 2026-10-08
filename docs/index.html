@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive concept for adapting and testing extraction prompts inside the Fireworks console. All model responses are simulated.">
+<title>Prompt migration · Fireworks console prototype</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<aside class="sidebar" aria-label="Console context">
+  <div class="brand"><svg viewBox="0 0 36 30" aria-hidden="true"><path d="m14 2 4 12L23 2M6 9l8 10H2m28-10-8 10h12"/></svg><span>Fireworks</span></div>
+  <div class="workspace-label"><span class="workspace-avatar">E</span><div>Example workspace<small>Console prototype</small></div></div>
+  <div class="nav-caption">BUILD</div>
+  <div class="nav-context"><span class="nav-icon">⌂</span>Overview</div>
+  <div class="nav-context"><span class="nav-icon">◇</span>Model library</div>
+  <div class="nav-context"><span class="nav-icon">▹</span>Playground</div>
+  <div class="nav-item selected" aria-current="page"><span class="nav-icon">⇄</span>Prompt migration</div>
+  <div class="nav-caption">MANAGE</div>
+  <div class="nav-context"><span class="nav-icon">▱</span>Deployments</div>
+  <div class="nav-context"><span class="nav-icon">⊞</span>Fine-tuning</div>
+  <div class="nav-context"><span class="nav-icon">⌁</span>Usage</div>
+  <div class="sidebar-foot"><span class="prototype-dot"></span>Take-home concept<small>Navigation shown for context</small></div>
+</aside>
+<div class="app-shell">
+<header class="topbar"><div class="breadcrumb">Playground <span>/</span> <strong>Prompt migration</strong></div><a href="overview.pdf" target="_blank" rel="noopener">One-page overview <span aria-hidden="true">↗</span></a></header>
+<main>
+  <section class="page-heading"><div><div class="heading-title"><h1>Prompt migration</h1><span class="prototype-tag">PROTOTYPE</span></div><p>Check what changes when you move a prompt to an open model. Review a revision and test it.</p></div><button id="export" class="button secondary" disabled>Export session <span aria-hidden="true">↓</span></button></section>
+  <div class="notice"><span class="info-icon" aria-hidden="true">i</span><p><strong>Interactive prototype.</strong> Model responses and revisions use a local simulation for these invoice examples. No API calls or credentials. Results are not measured Kimi performance.</p></div>
+  <section class="context-bar" aria-label="Migration setup"><div class="context-item"><span class="context-label">WORKLOAD</span><strong>Invoice extraction</strong><span class="subtle">4 editable examples</span></div><span class="context-divider"></span><div class="context-item"><span class="context-label">TARGET MODEL</span><strong><span class="model-symbol">K</span>Kimi K2.5</strong><span class="subtle">Fireworks</span></div><div class="simulation-label"><span></span>Simulated session</div></section>
+  <nav class="steps" aria-label="Workflow progress"><div id="step-1" class="step current"><span>1</span>Test original</div><div class="step-line"></div><div id="step-2" class="step"><span>2</span>Review revision</div><div class="step-line"></div><div id="step-3" class="step"><span>3</span>Compare results</div></nav>
+  <div class="workspace">
+    <div class="input-column">
+      <section class="panel"><div class="panel-header"><div><h2>Original prompt</h2><p>Your existing extraction instructions.</p></div><span class="version">v1</span></div><label for="prompt" class="sr-only">Original extraction prompt</label><textarea id="prompt" class="prompt-editor" spellcheck="false" maxlength="12000"></textarea><div class="panel-foot"><span>Edits reset results.</span><button id="reset" class="text-button">Reset sample</button></div></section>
+      <section class="panel"><div class="panel-header"><div><h2>Test examples <span class="count">4</span></h2><p>Expected values define a passing result.</p></div><span class="subtle-label">SYNTHETIC DATA</span></div><div id="case-tabs" class="case-tabs" role="tablist" aria-label="Test examples"></div><div class="example-content" id="case-editor" role="tabpanel"><div class="case-heading"><h3 id="case-name"></h3><span id="case-position"></span></div><p id="case-note" class="case-note"></p><label for="case-input">Document text</label><textarea id="case-input" spellcheck="false" maxlength="12000"></textarea><div class="expected-label"><label for="case-expected">Expected output</label><span>JSON</span></div><textarea id="case-expected" spellcheck="false" maxlength="8000"></textarea><p class="field-hint">Keep the four field names. Use numbers for totals and <code>null</code> for missing data.</p><p id="input-error" class="inline-error" role="alert" hidden></p></div></section>
+    </div>
+    <div class="results-column">
+      <section class="panel results-panel"><div class="panel-header"><div><h2>Test results</h2><p>Inspect differences against your requirements.</p></div><span id="result-badge" class="version">Not run</span></div><div class="run-bar"><div><strong>4 examples <span>·</span> 16 field checks</strong><span>Exact values. Same requirements before and after.</span></div><button id="run" class="button primary"><span aria-hidden="true">▷</span>Run test</button></div><div id="status" class="status" role="status" aria-live="polite" hidden></div><div id="results-empty" class="empty-state"><div class="empty-symbol" aria-hidden="true"><span>{ }</span><i>→</i><span>✓</span></div><h3>See what carries over.</h3><p>Run the sample prompt to reveal differences<br>in identifiers, values, and missing information.</p><div class="empty-tags"><span>Field-level checks</span><span>Reviewable revisions</span></div></div><div id="results-content" hidden></div></section>
+      <section id="revision-panel" class="panel revision-panel" hidden><div class="panel-header"><div><h2>Proposed revision</h2><p>Focused additions to the original prompt.</p></div><span class="version purple">v2</span></div><div class="revision-content"><div class="review-note"><span aria-hidden="true">✦</span>Review the changes, then rerun. Expected outputs stay fixed.</div><div id="revision-rules"></div><details class="full-prompt"><summary>View full revised prompt</summary><pre id="revised-prompt"></pre></details><button id="rerun" class="button primary wide">Test this revision <span aria-hidden="true">→</span></button><p class="small-print">A proposed edit can help, do nothing, or cause regressions.</p></div></section>
+      <p id="results-limit" class="results-limit" hidden>Sample behavior only. Passing these examples does not establish production readiness.</p>
+    </div>
+  </div>
+  <footer><span>Fireworks console concept</span><span>Desktop prototype · Browser-only simulation · No saved sessions</span></footer>
+</main></div>
+<script type="module" src="app.js"></script>
+</body></html>
