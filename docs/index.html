@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="A guided first migration evaluation inside a Fireworks console concept. Start with a prompt and a few examples. All model outputs are simulated.">
-<title>First migration eval · Fireworks console prototype</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=8">
+<title>Test your prompt on a new model · Fireworks console prototype</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 <aside class="sidebar" aria-label="Console context">
@@ -18,7 +18,7 @@
 <div class="app">
 <header class="topbar"><div>Evaluations <span>/</span><strong>New migration eval</strong></div><a href="overview.pdf" target="_blank" rel="noopener">One-page overview ↗</a></header>
 <main>
-  <div class="page-heading"><h1>Create your first migration eval</h1><span class="badge">CONSOLE CONCEPT</span></div>
+  <div class="page-heading"><div><h1>Test your prompt on a new model</h1><p>Compare results, inspect failures, and test prompt changes.</p></div><span class="badge">CONSOLE CONCEPT</span></div>
   <details class="demo-notice"><summary><span class="demo-dot"></span><strong>Demo mode</strong> · Simulated responses and suggestions. No API keys needed.<span class="notice-more">Details</span></summary><p>Model choices identify your comparison; all current models share one local behavior profile, and all Fireworks models share another. Results do not measure or predict model performance. The demo supports the invoice labels and three candidate prompt rules in these examples. Current-model outputs follow a fixed profile and do not respond to prompt edits. In production, this onboarding flow would reuse Fireworks datasets, Eval Protocol, and <a href="https://fireworks.ai/blog/self-improving-agent" target="_blank" rel="noopener">GEPA</a>; these services are not connected here.</p></details>
   <nav class="steps" aria-label="Evaluation steps">
     <button id="step-setup" class="step current" aria-current="step"><span>1</span>Set up</button>
