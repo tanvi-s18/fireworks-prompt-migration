@@ -12,20 +12,20 @@ Fireworks already provides datasets, evaluation jobs, custom evaluators, and [GE
 
 ## Critical path
 
-1. Choose the current provider: Claude or OpenAI (GPT).
-2. Bring a working prompt and starter examples with expected JSON. Four synthetic invoice examples are ready to try.
-3. Run the comparison. Current-provider results appear alongside Kimi results; no manual baseline-output form or credentials are required.
-4. Inspect migration regressions (current model passes, Kimi fails), shared failures (both fail), and target improvements (current model fails, Kimi passes).
-5. Review a proposed prompt adaptation and compare all three stages against unchanged requirements.
-6. Export prompts, examples, outputs, checks, comparisons, and simulation provenance as JSON.
+1. **Set up comparison.** Choose from seven Claude/GPT baseline models and eight Fireworks candidates. Edit your prompt and the four starter examples with expected JSON.
+2. **Inspect results.** Review one example at a time. Separate migration regressions (current model passes, candidate fails), shared failures, and candidate improvements.
+3. **Choose prompt edits.** Check or uncheck each suggested addition. A live preview includes only selected changes. Test the selection, then return to results to compare all three stages.
+4. Export prompts, examples, outputs, checks, model selections, and only the edits actually tested as JSON.
+
+Steps preserve inputs when navigating back. Editing setup invalidates comparisons. Changing the selected adaptations clears the adapted run until retested; untested changes are never exported as applied. With no additions selected, the original prompt stays unchanged and the rerun button is disabled.
 
 Expected values define correctness. Current-model outputs are evaluated too. Equal aggregate scores do not establish parity; regressions are tracked per field. Parity does not establish correctness or production readiness.
 
 ## Simulation boundary
 
-Both model responses and prompt suggestions use a limited deterministic browser simulation. The Claude and OpenAI choices share the same illustrative incumbent behavior; the selector changes provider labels, not measured performance. The simulation parses the sample invoice labels and recognizes three target prompt clarifications: preserve invoice IDs, use the issuing seller, and avoid substituting a subtotal for a missing final total. Arbitrary prompt behavior and document formats are outside its scope.
+Both model responses and prompt suggestions use a limited deterministic browser simulation. All current-model choices share one illustrative incumbent profile; all Fireworks candidates share one target profile. The selectors change comparison labels, not measured performance. Model labels follow the [Fireworks model guide](https://docs.fireworks.ai/guides/recommended-models), with Kimi K2.5 retained as the original sample choice. The simulation parses the sample invoice labels and recognizes three target prompt clarifications: preserve invoice IDs, use the issuing seller, and avoid substituting a subtotal for a missing final total. Arbitrary prompt behavior and document formats are outside its scope.
 
-The default sample has 3 migration regressions and 1 shared failure, then 0 migration regressions and 1 shared failure after adaptation. These are invented behaviors, not measured or predicted model results.
+The default sample has 3 migration regressions and 1 shared failure, then 0 migration regressions and 1 shared failure after all three edits. Selecting just one edit fixes only its corresponding check and leaves two migration regressions. These are invented behaviors, not measured or predicted model results.
 
 The incumbent simulation reads the document independently of expected values. Edits invalidate results, and rerunning regenerates both outputs. Expected values are never changed by suggestions; incumbent results stay fixed during the adaptation rerun. All data stays in the browser session until exported; there is no storage or telemetry. No API keys, accounts, inference requests, or backend are used.
 

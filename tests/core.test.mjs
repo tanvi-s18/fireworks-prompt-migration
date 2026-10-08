@@ -78,3 +78,44 @@ test('incumbent simulation follows document edits independently of expected valu
  assert.equal(simulateIncumbent(SAMPLE_CASES[2].input).currency,'USD');
  assert.deepEqual(simulateIncumbent('Unknown format'),{invoice_id:null,seller_name:null,total:null,currency:null});
 });
+
+test('each prompt edit can be applied independently without fixing unselected failures',async()=>{
+ const {simulateIncumbent,migrationFailures,migrationSummary}=await import('../docs/core.js');
+ const incumbent=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateIncumbent(c.input)));
+ const before=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,ORIGINAL_PROMPT)));
+ const additions=suggestAdditions(migrationFailures(incumbent,before),ORIGINAL_PROMPT);
+ const expectations=structuredClone(SAMPLE_CASES.map(c=>c.expected));
+ assert.equal(revise(ORIGINAL_PROMPT,[]),ORIGINAL_PROMPT);
+ for(const addition of additions){
+  const prompt=revise(ORIGINAL_PROMPT,[addition]);
+  const after=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,prompt)));
+  assert.equal(summarize(after).fields,13);
+  assert.deepEqual(transitions(before,after),{fixed:1,regressed:0});
+  assert.equal(migrationSummary(incumbent,after).regressions,2);
+  for(const result of after)for(const check of result.checks){
+   if(check.field!==addition.field)assert.equal(check.pass,before.find(r=>r.id===result.id).checks.find(c=>c.field===check.field).pass);
+  }
+  for(const rejected of additions.filter(a=>a.id!==addition.id))assert.ok(!prompt.includes(rejected.instruction));
+ }
+ assert.deepEqual(SAMPLE_CASES.map(c=>c.expected),expectations);
+});
+
+test('comparison export includes only tested additions and selected model identities',async()=>{
+ const {simulateIncumbent,migrationFailures}=await import('../docs/core.js');
+ const {createComparisonExport}=await import('../docs/export.js');
+ const {SOURCE_MODELS,TARGET_MODELS}=await import('../docs/models.js');
+ const incumbent=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateIncumbent(c.input)));
+ const before=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,ORIGINAL_PROMPT)));
+ const additions=suggestAdditions(migrationFailures(incumbent,before),ORIGINAL_PROMPT);
+ const appliedAdditions=additions.filter(a=>a.id==='seller_name');
+ const testedPrompt=revise(ORIGINAL_PROMPT,appliedAdditions);
+ const after=makeResults(SAMPLE_CASES,SAMPLE_CASES.map(c=>simulateExtraction(c.input,testedPrompt)));
+ const state={snapshot:{sourceModel:SOURCE_MODELS[3],targetModel:TARGET_MODELS[2],prompt:ORIGINAL_PROMPT,cases:SAMPLE_CASES},incumbent,before,after,additions,appliedAdditions,testedPrompt,runAt:'2026-10-08T00:00:00Z'};
+ const exported=JSON.parse(JSON.stringify(createComparisonExport(state)));
+ assert.equal(exported.source_model.name,'GPT-5.5');assert.equal(exported.target_model.name,'MiniMax M3');
+ assert.deepEqual(exported.applied_additions.map(a=>a.id),['seller_name']);
+ assert.equal(exported.proposed_additions.length,3);assert.equal(exported.revised_prompt,testedPrompt);
+ assert.equal(exported.migration_after.regressions,2);
+ const untested=createComparisonExport({...state,after:null});
+ assert.equal(untested.revised_prompt,null);assert.equal(untested.migration_after,null);assert.deepEqual(untested.applied_additions,[]);
+});
