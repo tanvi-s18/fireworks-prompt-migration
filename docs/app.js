@@ -80,7 +80,8 @@ function renderResults(){
   const badge=counts.regressions?`${counts.regressions} migration regression${counts.regressions===1?'':'s'}`:counts.sharedFailures?'Shared failure':'All checks pass';
   return `<button class="result-case ${i===state.resultSelected?'selected':''}" data-result="${i}" aria-pressed="${i===state.resultSelected}"><span class="case-number">0${i+1}</span><span>${esc(r.name)}<small>${badge}</small></span></button>`;
  }).join('');
- $('results-content').innerHTML=stages+summary+`<div class="comparison-note ${gap.regressions?'has-gap':''}">${message}</div><div class="result-layout"><div class="result-cases"><div class="section-label">EXAMPLES</div>${cases}</div><div id="result-detail" class="result-detail panel"></div></div>`;
+ const testedPrompt=after?`<details class="tested-prompt"><summary>View updated prompt <span>${state.appliedAdditions.length} tested edit${state.appliedAdditions.length===1?'':'s'} · included in export</span></summary><pre>${esc(state.testedPrompt)}</pre></details>`:'';
+ $('results-content').innerHTML=stages+summary+`<div class="comparison-note ${gap.regressions?'has-gap':''}">${message}</div>`+testedPrompt+`<div class="result-layout"><div class="result-cases"><div class="section-label">EXAMPLES</div>${cases}</div><div id="result-detail" class="result-detail panel"></div></div>`;
  document.querySelectorAll('.result-case').forEach(b=>b.onclick=()=>{state.resultSelected=Number(b.dataset.result);renderResults();});
  renderResultDetail();
  const supported=suggestAdditions(migrationFailures(incumbent,before),state.snapshot.prompt).length;

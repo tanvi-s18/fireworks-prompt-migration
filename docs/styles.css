@@ -4,3 +4,5 @@
 /* Keep the results action within easy reach on shorter desktop windows. */
 #screen-results .screen-actions{position:sticky;bottom:0;z-index:2;background:#faf9fcf5;border-top:1px solid var(--line);margin-top:18px;padding:14px 0;backdrop-filter:blur(8px)}
 .stage-card{padding:13px 17px}.check-table td{padding:9px 12px}.migration-summary{padding:12px 3px;margin-bottom:14px}
+
+.tested-prompt{margin:0 0 18px;border:1px solid #e4d9f1;border-radius:7px;background:#fff}.tested-prompt summary{cursor:pointer;color:var(--purple);font-size:11px;font-weight:550;padding:14px 16px}.tested-prompt summary span{font-size:9px;color:#a798b4;font-weight:400;float:right}.tested-prompt pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0;padding:16px 20px;border-top:1px solid #ece5f4;color:#75637f;background:#fdfbff}

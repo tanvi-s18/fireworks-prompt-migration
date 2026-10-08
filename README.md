@@ -14,7 +14,7 @@ Fireworks already provides datasets, evaluation jobs, custom evaluators, and [GE
 
 1. **Set up comparison.** Choose from seven Claude/GPT baseline models and eight Fireworks candidates. Edit your prompt and the four starter examples with expected JSON.
 2. **Inspect results.** Review one example at a time. Separate migration regressions (current model passes, candidate fails), shared failures, and candidate improvements.
-3. **Choose prompt edits.** Check or uncheck each suggested addition. A live preview includes only selected changes. Test the selection, then return to results to compare all three stages.
+3. **Choose prompt edits.** Check or uncheck each suggested addition. A live preview includes only selected changes. Test the selection, then return to results to compare all three stages and expand “View updated prompt” to inspect the exact tested text.
 4. Export prompts, examples, outputs, checks, model selections, and only the edits actually tested as JSON.
 
 Steps preserve inputs when navigating back. Editing setup invalidates comparisons. Changing the selected adaptations clears the adapted run until retested; untested changes are never exported as applied. With no additions selected, the original prompt stays unchanged and the rerun button is disabled.
