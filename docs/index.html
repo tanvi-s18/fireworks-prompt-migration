@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="A guided first migration evaluation inside a Fireworks console concept. Start with a prompt and a few examples. All model outputs are simulated.">
 <title>First migration eval · Fireworks console prototype</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=5">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 <aside class="sidebar" aria-label="Console context">
@@ -43,7 +43,7 @@
   <section id="screen-results" class="screen" aria-labelledby="results-heading" hidden>
     <div class="screen-heading"><div><h2 id="results-heading" tabindex="-1">Inspect the migration gaps</h2><p id="results-subtitle">Compare each model against your expected values.</p></div><span class="badge">SIMULATED</span></div>
     <div id="results-content"></div>
-    <div class="screen-actions"><button id="back-setup" class="text-button">← Back to setup</button><div class="action-group"><button id="export" class="button secondary">Export comparison</button><button id="choose-edits" class="button primary">Choose prompt edits →</button></div></div>
+    <div class="screen-actions"><button id="back-setup" class="text-button">← Back to setup</button><div class="action-group"><button id="export" class="button secondary" title="Download a JSON record of the examples, prompts, outputs, and checks">Export comparison</button><button id="choose-edits" class="button primary">Choose prompt edits →</button><button id="copy-prompt" class="button primary" hidden>Copy updated prompt</button></div></div>
     <p class="results-limit">Four starter examples are not a production evaluation. Expand with representative held-out cases before deciding to migrate.</p>
   </section>
   <section id="screen-adapt" class="screen" aria-labelledby="adapt-heading" hidden>
@@ -54,5 +54,5 @@
   <footer><span>Fireworks console concept</span><span>A guided first evaluation · Desktop prototype</span></footer>
 </main>
 </div>
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body></html>

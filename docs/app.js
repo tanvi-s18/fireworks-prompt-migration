@@ -80,7 +80,7 @@ function renderResults(){
   const badge=counts.regressions?`${counts.regressions} migration regression${counts.regressions===1?'':'s'}`:counts.sharedFailures?'Shared failure':'All checks pass';
   return `<button class="result-case ${i===state.resultSelected?'selected':''}" data-result="${i}" aria-pressed="${i===state.resultSelected}"><span class="case-number">0${i+1}</span><span>${esc(r.name)}<small>${badge}</small></span></button>`;
  }).join('');
- const testedPrompt=after?`<details class="tested-prompt"><summary>View updated prompt <span>${state.appliedAdditions.length} tested edit${state.appliedAdditions.length===1?'':'s'} · included in export</span></summary><pre>${esc(state.testedPrompt)}</pre></details>`:'';
+ const testedPrompt=after?`<section class="tested-prompt panel" aria-labelledby="tested-prompt-heading"><div class="panel-header"><h3 id="tested-prompt-heading">Prompt preview</h3><span class="small-label">${state.appliedAdditions.length} TESTED EDIT${state.appliedAdditions.length===1?'':'S'}</span></div><pre id="tested-prompt-text">${esc(state.testedPrompt)}</pre><div class="panel-foot">The exact prompt used for these results. Only your selected edits are included.</div></section>`:'';
  $('results-content').innerHTML=stages+summary+`<div class="comparison-note ${gap.regressions?'has-gap':''}">${message}</div>`+testedPrompt+`<div class="result-layout"><div class="result-cases"><div class="section-label">EXAMPLES</div>${cases}</div><div id="result-detail" class="result-detail panel"></div></div>`;
  document.querySelectorAll('.result-case').forEach(b=>b.onclick=()=>{state.resultSelected=Number(b.dataset.result);renderResults();});
  renderResultDetail();
@@ -88,7 +88,8 @@ function renderResults(){
  $('choose-edits').hidden=!supported;
  $('choose-edits').textContent=after?'Change selected edits':'Choose prompt edits →';
  $('choose-edits').className='button '+(after?'secondary':'primary');
- $('export').className='button '+(after||!supported?'primary':'secondary');
+ $('export').className='button secondary';
+ $('copy-prompt').hidden=!after;
 }
 function renderResultDetail(){
  const {incumbent,before,after}=state,target=after||before,index=state.resultSelected;
@@ -130,6 +131,15 @@ function rerun(){
  state.after=makeResults(state.snapshot.cases,state.snapshot.cases.map(c=>simulateExtraction(c.input,state.testedPrompt)));
  status();selectFirstFailure();renderResults();showScreen('results');
 }
+async function copyTestedPrompt(){
+ if(!state.after||!state.testedPrompt)return;
+ try{
+  await navigator.clipboard.writeText(state.testedPrompt);
+  status('Updated prompt copied. It includes only the edits tested in this comparison.');
+ }catch{
+  status('Could not copy automatically. Select the text in the prompt preview and copy it.',true);
+ }
+}
 function exportSession(){
  if(!state.before)return;
  const payload=createComparisonExport(state);
@@ -143,7 +153,7 @@ for(const group of ['Anthropic','OpenAI']){
  $('source-model').append(el);
 }
 for(const model of TARGET_MODELS)$('target-model').add(new Option(model.name,model.id));
-$('run').onclick=run;$('rerun').onclick=rerun;$('export').onclick=exportSession;$('choose-edits').onclick=chooseEdits;
+$('run').onclick=run;$('rerun').onclick=rerun;$('export').onclick=exportSession;$('copy-prompt').onclick=copyTestedPrompt;$('choose-edits').onclick=chooseEdits;
 $('back-setup').onclick=()=>{status();showScreen('setup');};$('back-results').onclick=()=>{renderResults();showScreen('results');};
 $('step-setup').onclick=()=>{status();showScreen('setup');};$('step-results').onclick=()=>{renderResults();showScreen('results');};$('step-adapt').onclick=chooseEdits;
 $('reset').onclick=()=>{state.prompt=ORIGINAL_PROMPT;state.cases=freshCases();state.selected=0;$('prompt').value=state.prompt;invalidate();renderCase();status('Sample prompt and examples restored.');};
