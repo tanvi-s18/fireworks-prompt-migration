@@ -65,3 +65,16 @@ test('changing expected values rescores incumbent as well as target',async()=>{
  const target=makeResults(cases,cases.map(c=>simulateExtraction(c.input,ORIGINAL_PROMPT)));
  assert.deepEqual(migrationSummary(baseline,target),{regressions:3,sharedFailures:2,improvements:0,passes:11});
 });
+
+test('incumbent simulation follows document edits independently of expected values',async()=>{
+ const {simulateIncumbent}=await import('../docs/core.js');
+ const edited=structuredClone(SAMPLE_CASES);
+ edited[0].input=edited[0].input.replace('Northline Studio','Aster Studio').replace('220.00','250.00');
+ const result=simulateIncumbent(edited[0].input);
+ assert.equal(result.seller_name,'Aster Studio');assert.equal(result.total,250);
+ edited[0].expected.total=999;
+ assert.equal(simulateIncumbent(edited[0].input).total,250);
+ assert.equal(makeResults(edited,edited.map(c=>simulateIncumbent(c.input)))[0].pass,false);
+ assert.equal(simulateIncumbent(SAMPLE_CASES[2].input).currency,'USD');
+ assert.deepEqual(simulateIncumbent('Unknown format'),{invoice_id:null,seller_name:null,total:null,currency:null});
+});

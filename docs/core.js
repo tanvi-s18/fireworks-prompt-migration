@@ -17,9 +17,13 @@ export const SAMPLE_CASES = [
   {id: 'identifier', name: 'Identifiers and amounts', note: 'Preserve leading zeros and distinguish the total from the subtotal.', input: 'Invoice number: 000042\nIssued by: Signal Labs\nSubtotal: GBP 1000.00\nVAT: GBP 200.00\nInvoice total: GBP 1200.00', expected: {invoice_id:'000042', seller_name:'Signal Labs', total:1200, currency:'GBP'}},
 ];
 export function clone(value) {return structuredClone(value);}
-// Saved baseline fixtures, authored for the demo, not responses from Claude.
-// Both illustrative models infer USD incorrectly in the missing-data example.
-export const SAVED_INCUMBENT = SAMPLE_CASES.map(c=>({...c.expected,...(c.id==='missing'?{currency:'USD'}:{})}));
+// One illustrative incumbent behavior profile, shared by both provider labels.
+// It parses the document independently of expected values, including after edits.
+// It is not a real Claude or GPT response and still infers USD incorrectly.
+export function simulateIncumbent(input) {
+  return simulateExtraction(input,'Preserve leading zeros. Use the issuing supplier. Use the explicitly stated final invoice total.');
+}
+export const SAVED_INCUMBENT = SAMPLE_CASES.map(c=>simulateIncumbent(c.input));
 export function classifyCheck(incumbent, target) {
   if(incumbent.pass && !target.pass) return 'regression';
   if(!incumbent.pass && !target.pass) return 'shared';
